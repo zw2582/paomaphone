@@ -1,22 +1,34 @@
+<style scoped>
+.head-img {
+	width:40px;
+	height:40px;
+	border-radius:50%;
+	border:1px solid #ececec;
+}
+</style>
 <template>
 	<div>
 		<!-- 脑袋 -->
 		<x-header :right-options="{showMore:true}">房间号:{{room_no}}</x-header>
 		
 		<!-- 显示房主信息 -->
-		<group title="房间信息">
-			<cell title="房主：" :value="master_name"></cell>
-		</group>
+		<card>
+			<span slot="header">房间信息</span>
+			<div slot="content">
+				<span>房主:{{master_name}}</span>
+				<span>当前人数:{{member_count}}</span>
+			</div>
+		</card>
 		
 		<!-- 显示跑道 -->
 		<ul v-if="isactive==2">
-			<li v-for="score,mem in playingData">
-			{{mem}}-{{score}}
+			<li v-for="data in members">
+			{{data.rank}}--<img class="head-img" :src="data.user.headimg" />--{{data.score}}
 			</li>
 		</ul>
 		<ul v-else>
-			<li v-for="mem in members">
-			{{mem}}
+			<li v-for="data in members">
+				<img class="head-img" :src="data.user.headimg" />
 			</li>
 		</ul>
 		
@@ -37,14 +49,17 @@
 			<divider>游戏即将开始</divider>
 			<div><span :style="{'font-size':'80px'}">{{beginTxt}}</span></div>
 		</x-dialog>
+		
+		<!-- 模拟摇晃 -->
+		<x-button @click.native="testShake">摇晃</x-button>
 	</div>
 </template>
 
 <script>
-import {XHeader,Group,Cell,XButton,XDialog} from 'vux'
+import {XHeader,Group,Cell,XButton,XDialog,Card,Divider} from 'vux'
 
 export default {
-	components:{XHeader,Group,Cell,XButton,XDialog},
+	components:{XHeader,Group,Cell,XButton,XDialog,Card,Divider},
 	data() {
 		return {
 			'room_no':this.$route.query.room_no,
@@ -54,13 +69,13 @@ export default {
 			'master_headimg':'',
 			'master_sex':'',
 			'join':false,	//是否加入成功,
-			'playingData':[],	//游戏进行中数据
 			'member_count':0,	//人员总数
 			'members':[],	//房间内所有人员
 			'ws':null,	//websocket
 			'isactive':0,	//房间状态
 			showBeginDialog:false,
 			beginTxt:3,
+			users:[],
 		}
 	},
 	methods :{
@@ -92,6 +107,8 @@ export default {
 					_this.$set(_this, 'master_sex', res.data.master_sex);
 					_this.$set(_this, 'member_count', res.data.member_count);
 					_this.$set(_this, 'members', res.data.members);
+					console.log('members:');
+					console.log(res.data.members);
 					_this.$set(_this, 'join', true);
 					console.log('加入房间成功');
 				}
@@ -168,6 +185,15 @@ export default {
 			} else {
 				this.$vux.toast.show({text:'只有房主可以准备比赛'});
 			}
+		},
+		//模拟摇晃
+		testShake() {
+			const _this = this;
+			if(!_this.shake) {
+		    	_this.$vux.toast.show({text:'还没有开始，别着急'});
+		    } else {
+		        _this.ws.send(JSON.stringify({action:'play','uuid':_this.glo.uuid,'room_no':_this.room_no,'count':1}));
+		    }
 		}
 	},
 	watch:{
@@ -191,6 +217,7 @@ export default {
 					var received_msg = evt.data;
 					console.log("接收到消息");
 					console.log(received_msg);
+					received_msg = JSON.parse(received_msg);
 					if (received_msg.status == 0) {
 						//消息发生错误
 						_this.$vux.alert({title:'错误提示', content:received_msg.message});
@@ -225,11 +252,13 @@ export default {
 									_this.$set(_this, 'isactive', 2);
 								}
 								//显示进度
-								_this.$set(_this, 'playingData', data.data);
+								_this.$set(_this, 'members', data.data);
 								break;
 							case 'comple':
 								_this.$set(_this, 'shake', false);
 								_this.$set(_this, 'isactive', 3);
+								_this.$vux.toast.show({text:'比赛结束',type:'text'});
+								break;
 							case 'prepare':
 								_this.$set(_this, 'shake', false);
 								_this.$set(_this, 'isactive', 1);
@@ -249,6 +278,23 @@ export default {
 				ws.onclose = function() {
 					_this.$vux.alert.show({title:'系统错误',text:'服务端异常已关闭'});
 				}
+			}
+		},
+		member_count:function(val) {
+			//当数量发生变化表示有人进入，且比赛还未开始时，可同步用户数据
+			if (this.isactive == 1) {
+				const _this = this;
+				_this.$http.get(this.baseurl+'/phone/site/users?room_no'+this.room_no+'&uuid='+this.glo.uuid, 
+					{withCredentials:true}).then(function(res){
+						res = res.data;
+						if (res.status == 1) {
+							_this.$set(_this, 'members', data.data);
+						} else {
+							_this.$vux.toast.show({text:res.message});
+						}
+					}, function(err){
+						_this.$vux.toast.show({text:'获取member失败'});
+					});
 			}
 		}
 	},

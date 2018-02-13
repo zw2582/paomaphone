@@ -19,7 +19,8 @@ Vue.use(ConfirmPlugin)
 //设置全局变量
 Vue.prototype.glo = {
 }
-Vue.prototype.baseurl = 'http://paoma.com'
+//Vue.prototype.baseurl = 'http://paoma.com'
+Vue.prototype.baseurl = ''
 
 //用户登录函数
 Vue.prototype.login = function(call) {
