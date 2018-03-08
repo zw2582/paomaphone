@@ -16,37 +16,12 @@ Vue.use(ToastPlugin)
 Vue.use(AlertPlugin)
 Vue.use(ConfirmPlugin)
 
-//设置全局变量
-Vue.prototype.glo = {
+//设置用户数据
+Vue.prototype.user = {
 }
-//Vue.prototype.baseurl = 'http://paoma.com'
-Vue.prototype.baseurl = ''
-
-//用户登录函数
-Vue.prototype.login = function(call) {
-	//获取用户信息
-	if (!this.glo.uid) {
-		const _this = this;
-		this.$http.get(_this.baseurl+'/phone/site/user',{withCredentials:true}).then(function(res){
-			res = res.data;
-			console.log(res);
-			if (res.status == 1) {
-				_this.glo = res.data;
-				//判断用户是否登录，loading,没有则生成登录引导页并跳转
-				if(!_this.glo.uid) {
-					console.log('登录失败');
-				}
-				call &&　call(_this.glo);
-			} else {
-				_this.$vux.toast.show({text:res.message});
-			}
-		}, function(err){
-			_this.$vux.toast.show({text:'获取用户信息失败'});
-		});
-	} else {
-		call &&　call(this.glo);
-	}
-}
+	
+//定义全局的websocket连接,登录成功之后自动连接
+Vue.prototype.ws = null;
 
 /* eslint-disable no-new */
 new Vue({

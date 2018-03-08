@@ -25,7 +25,7 @@
 		
 		<!-- 操作面板 -->
 		<grid :cols=2>
-			<grid-item @click.native="showCreateDialog=true" label="创建房间"/>
+			<grid-item @click.native="showCreateDialog" label="创建房间"/>
 			<grid-item @click.native="joinRoom" label="加入房间"/>
 			<grid-item @click.native="currentRoom" label="当前房间"/>
 			<grid-item label="写评价"/>
@@ -55,6 +55,8 @@
 
 <script>
 import {XHeader,Blur,Grid,GridItem,XDialog,Card,XInput,XNumber,XButton,Box,Divider} from 'vux'
+import User from '@/api/user.js'
+import Room from '@/api/room.js'
 
 export default {
 	components:{XHeader,Blur,Grid,GridItem,XDialog,Card,XInput,XNumber,XButton,Box,Divider},
@@ -80,56 +82,55 @@ export default {
 					_this.$router.push({path:'/room', query:{'room_no':room_no}})
 		        },
 			});
-			return;
-			this.$vux.toast.show({text:'准备进入房间', type:'warn'});
 		},
+		//设置奖励
+		showCreateDialog() {
+			var _this = this;
+			if (User.room_no) {
+				//请先退出当前房间
+				this.$vux.confirm.show({
+					onCancel(){},
+					onConfirm(){
+						//确认退出当前房间
+						Room.outRoom(function(){
+							//显示奖励设置
+							this.$set(this, "showCreateDialog", true);
+						});
+					}
+				})
+			} else {
+				//显示奖励设置
+				this.$set(this, "showCreateDialog", true);
+			}
+		}
 		//创建房间
 		createRoom() {
 			this.$set(this, "showCreateDialog", false);
-			//创建房间，显示loading
-			this.$vux.loading.show({text:"正在创建房间"})
+			
 			//发送请求创建房间
-			this.$http.get(this.baseurl+'/phone/site/create',{withCredentials:true}).then((res)=>{
-				res = res.data;
-				if (res.status == 1) {
-					this.$vux.loading.hide();
-					let room_no = res.data.room_no;
-					this.glo.room_no = room_no;	//修改当前房间
-					//进入房间
-					this.$router.push({path:'/room', query:{'room_no':room_no}})
-				} else {
-					this.$vux.loading.hide();
-					this.$vux.toast.show({text:res.message, type:'warn'});
-				}
-			}, (err)=>{
-				this.$vux.toast.show({text:err, type:'warn'})
-			});
+			var _this = this;
+			Room.createRoom(this, function(room_no){
+				//进入房间
+				_this.$router.push({path:'/room', query:{'room_no':room_no}})
+			})
 		},
 		//当前房间
 		currentRoom() {
-			this.$router.push({path:'/room', query:{'room_no':this.glo.room_no}})
+			if (!this.user.room_no) {
+				this.$vux.toast.text('当前没有所在房间');
+				return;
+			}
+			this.$router.push({path:'/room', query:{'room_no':this.user.room_no}})
 		},
 		test() {
-			const _this = this;
-			var i = 3;
-			_this.$set(_this, 'showBeginDialog', true);
-			_this.$set(_this, 'beginTxt', i);
-								var interclock = setInterval(function(){
-									i--;
-									_this.$set(_this, 'beginTxt', i);
-									if (i == 0) {
-										_this.$set(_this, 'beginTxt', '开始');
-										_this.$set(_this, 'showBeginDialog', false);
-										clearInterval(interclock);
-									}
-								}, 1000);
 		}
 	},
 	mounted() {
 		const _this = this;
-		this.login(function(glo){
+		//获取用户信息
+		User.current(this, function(userinfo){
 			_this.$set(_this, 'headimg', glo.headimg);
-		});
+		})
 	}
 }
 </script>
