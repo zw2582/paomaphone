@@ -16,7 +16,10 @@
 <template>
 	<div>
 		<!-- 脑袋 -->
-		<x-header>paoma</x-header>
+		<x-header>
+			<span>跑马吧</span>
+			<span @click="backClick" slot="overwrite-left">{{leftTxt}}</span>
+		</x-header>
 		
 		<!-- 用户头像 -->
 		<blur :url="headimg">
@@ -25,10 +28,18 @@
 		
 		<!-- 操作面板 -->
 		<grid :cols=2>
-			<grid-item @click.native="showCreateDialog" label="创建房间"/>
-			<grid-item @click.native="joinRoom" label="加入房间"/>
-			<grid-item @click.native="currentRoom" label="当前房间"/>
-			<grid-item label="写评价"/>
+			<grid-item @click.native="showCreate" label="创建房间">
+				<img slot="icon" src="../assets/create_room.png"/>
+			</grid-item>
+			<grid-item @click.native="joinRoom" label="加入房间">
+				<img slot="icon" src="../assets/join_room.png"/>
+			</grid-item>
+			<grid-item @click.native="currentRoom" label="当前房间">
+				<img slot="icon" src="../assets/now_room.png"/>
+			</grid-item>
+			<grid-item label="写评价">
+				<img slot="icon" src="../assets/comment.png"/>
+			</grid-item>
 		</grid>
 		
 		<box gap="10px 10px">
@@ -57,12 +68,14 @@
 import {XHeader,Blur,Grid,GridItem,XDialog,Card,XInput,XNumber,XButton,Box,Divider} from 'vux'
 import User from '@/api/user.js'
 import Room from '@/api/room.js'
+import headImg from '@/assets/head.png'
 
 export default {
 	components:{XHeader,Blur,Grid,GridItem,XDialog,Card,XInput,XNumber,XButton,Box,Divider},
 	data(){
 		return {
-			headimg:'',
+			headimg:headImg,
+			uid:0,
 			showCreateDialog:false,
 			showJoinDialog:false,
 			reward:{
@@ -75,7 +88,10 @@ export default {
 	methods:{
 		//进入房间
 		joinRoom() {
-			const _this = this;
+			var _this = this;
+			if (!this.user.uid) {
+				this.$vux.toast.text('请先登录!'); return;
+			}
 			this.$vux.confirm.prompt('', {
 				'title':'输入房间号',
 				onConfirm (room_no) {
@@ -84,8 +100,11 @@ export default {
 			});
 		},
 		//设置奖励
-		showCreateDialog() {
+		showCreate() {
 			var _this = this;
+			if (!this.user.uid) {
+				this.$vux.toast.text('请先登录!'); return;
+			}
 			if (User.room_no) {
 				//请先退出当前房间
 				this.$vux.confirm.show({
@@ -102,7 +121,7 @@ export default {
 				//显示奖励设置
 				this.$set(this, "showCreateDialog", true);
 			}
-		}
+		},
 		//创建房间
 		createRoom() {
 			this.$set(this, "showCreateDialog", false);
@@ -122,15 +141,30 @@ export default {
 			}
 			this.$router.push({path:'/room', query:{'room_no':this.user.room_no}})
 		},
+		//点击左侧按钮
+		backClick() {
+			if (!this.uid) {
+				//用户登录
+				location.href="/site/phone"
+			}
+		},
 		test() {
+			console.log(this.user);
 		}
 	},
 	mounted() {
 		const _this = this;
 		//获取用户信息
 		User.current(this, function(userinfo){
-			_this.$set(_this, 'headimg', glo.headimg);
+			_this.$set(_this, 'headimg', userinfo.headimg);
+			_this.$set(_this, 'uid', userinfo.uid);
 		})
+	},
+	computed:{
+		//左侧显示文字
+		leftTxt:function() {
+			return this.uid?'我':'登录';
+		}
 	}
 }
 </script>

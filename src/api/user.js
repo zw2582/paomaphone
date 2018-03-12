@@ -2,6 +2,12 @@
  * 用户信息管理
  */
 export default {
+	//用户登录
+	login:function(vue, fn) {
+		vue.$http.get(process.env.WEB_ADDR+'/user/login', {withCredentials:true}).then(res=>{
+			console.log(res.data);
+		});
+	},
 	/**
 	 * 获取当前用户信息
 	 * @param vue
@@ -37,6 +43,8 @@ export default {
 				//回调函数
 				fn(vue.user)
 			}
+		}, err=>{
+			vue.$vux.alert.show({title:'请求当前用户信息失败', content:err.message})
 		});
 	},
 }

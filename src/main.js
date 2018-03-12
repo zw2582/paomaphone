@@ -18,6 +18,7 @@ Vue.use(ConfirmPlugin)
 
 //设置用户数据
 Vue.prototype.user = {
+	'headimg':'../assets/head.png'
 }
 	
 //定义全局的websocket连接,登录成功之后自动连接
