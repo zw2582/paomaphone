@@ -105,15 +105,20 @@ export default {
 			if (!this.user.uid) {
 				this.$vux.toast.text('请先登录!'); return;
 			}
-			if (User.room_no) {
+			if (this.user.room_no) {
 				//请先退出当前房间
 				this.$vux.confirm.show({
-					onCancel(){},
+					title:'提示',
+					content:'是否退出当前所在房间',
+					onCancel(){
+						
+					},
 					onConfirm(){
 						//确认退出当前房间
-						Room.outRoom(function(){
+						Room.outRoom(_this, function(){
 							//显示奖励设置
-							this.$set(this, "showCreateDialog", true);
+							_this.user.room_no=0;
+							_this.$set(_this, "showCreateDialog", true);
 						});
 					}
 				})
@@ -129,12 +134,14 @@ export default {
 			//发送请求创建房间
 			var _this = this;
 			Room.createRoom(this, function(room_no){
+				_this.user.room_no = room_no;
 				//进入房间
 				_this.$router.push({path:'/room', query:{'room_no':room_no}})
 			})
 		},
 		//当前房间
 		currentRoom() {
+			console.log('current')
 			if (!this.user.room_no) {
 				this.$vux.toast.text('当前没有所在房间');
 				return;

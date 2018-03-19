@@ -32,7 +32,7 @@ export default {
 				vue.user.headimg = resdata.data.headimg
 				vue.user.room_no = resdata.data.room_no
 				//判断是否有需要验证的uuid,等待uuid认证后删除
-				var uuid = vue.$router.query.uuid;
+				var uuid = vue.$route.query.uuid;
 				if (uuid) {
 					vue.$http.get(process.env.WS_ADDR+'?action=auth_confirm&uid='+vue.user.uid+"&uuid="+uuid
 							,{withCredentials:false}).then(res=>{
