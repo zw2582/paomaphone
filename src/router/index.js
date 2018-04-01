@@ -16,6 +16,11 @@ export default new Router({
     	path: '/room',
     	name: 'room',
     	component: (resolve) => require(['@/components/Room'], resolve)
+    },
+    {
+    		path:'/room_list',
+    		name:'room_list',
+    		component:(resolve) => require(['@/components/RoomList'], resolve)
     }
   ]
 })

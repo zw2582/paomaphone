@@ -68,12 +68,13 @@ export default {
 		});
 	},
 	//获取房间信息
-	roomInfo:function(vue, room_no, fn) {
+	roomInfo:function(vue, room_no, fn, errfn) {
 		vue.$http.get(process.env.WEB_ADDR+'/room/info?room_no='+room_no,{withCredentials:true}).then(res=>{
 			var resdata = res.data;
 			if (!resdata.status) {
 				//获取房间信息失败
 				vue.$vux.alert.show({title:'获取房间信息失败', content:resdata.message});
+				errfn && errfn()
 			} else {
 				//获取房间信息成功
 				fn(resdata.data);
@@ -142,34 +143,43 @@ export default {
 		});
 	},
 	/**
-	 * 获取比赛数据
+	 * 获取个人排名和奖金
 	 * @param vue
 	 * @param room_no
 	 * @param runfn 正在比赛中的结果回调, max, data
 	 * @param resultfn 比赛结束的结果展示回调，rank，data
 	 * @returns
 	 */
-	listScores:function(vue, room_no, runfn, resultfn) {
-		vue.$http.get(process.env.WEB_ADDR+'/room/scores?room_no='+room_no+'&uid='+vue.user.uid, {withCredentials:false}).then(res=>{
+	getReward:function(vue, fn) {
+		vue.$http.get(process.env.WEB_ADDR+'/room/reward?room_no='+room_no+'&uid='+vue.user.uid, {withCredentials:false}).then(res=>{
 			var resdata = res.data
 			if(resdata.status == 1) {
-				//比赛中展示数据
-				runfn && runfn(resdata.data.rank, resdata.data.result, resdata.data.max)
-			} else if(resdata.status == 2) {
+				//个人排名，奖金，积分
+				runfn && runfn(resdata.data.rank, resdata.data.money, resdata.data.jifen)
+			} else {
 				//比赛结束展示数据
-				resultfn && resultfn(resdata.data.rank, resdata.data.result, resdata.data.max)
+				vue.$vux.alert.show({'title':'获取个人排名错误', 'text':resdata.message})
 			}
 		})
 	},
 	//摇晃手机
-	shakePhone:function(vue, fn) {
-		const _this = this;
-		//监听手机摇动事件
-		if (window.DeviceMotionEvent) {
-			window.addEventListener('devicemotion', deviceMotionHandler, false);
-		} else {
-			alert('你的设备不支持摇动');
+	shakePhone:function(vue, callback) {
+		this.vue = vue;
+		this.callback = callback;
+		//bind
+		this.bind = function() {
+			if (window.DeviceMotionEvent) {
+				window.addEventListener('devicemotion', deviceMotionHandler, false);
+			} else {
+				this.vue.$vux.alert.show({title:'提示',content:'你的设备不支持摇动'});
+			}
 		}
+		
+		//onbind
+		this.onbind = function() {
+			window.removeEventListener('devicemotion', deviceMotionHandler)
+		}
+		
 		var SHAKE_THRESHOLD = 3000;
 	    var last_update = 0;
 	    var y = 0; var z=0; var last_x=0; var last_y=0; var last_z=0;var x=0;
@@ -184,7 +194,7 @@ export default {
 	            z = acceleration.z;
 	            var speed = Math.abs(x + y + z - last_x - last_y - last_z) / diffTime * 10000;
 	            if (speed > SHAKE_THRESHOLD) {
-	            		fn && fn(vue)
+	            		this.callback && this.callback()
 	            }
 	            last_x = x;
 	            last_y = y;

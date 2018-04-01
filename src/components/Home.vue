@@ -11,6 +11,43 @@
 	border-radius:50%;
 	border:4px solid #ececec;
 }
+.grid-x-icon{
+	fill: #F70968;
+}
+.flex-demo {
+  text-align: center;
+  color:#000000;
+  position: relative;
+  padding-top:10px;
+  padding-bottom:10px;
+  font-size:14px;
+}
+.flex-demo:after {
+    content: " ";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 1px;
+    bottom: 0;
+    border-right: 1px solid #C7C7C7;
+    color: #C7C7C7;
+    transform-origin: 100% 0;
+    transform: scaleX(0.5);
+}
+.flex-demo:before {
+    content: " ";
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    height: 1px;
+    border-top: 1px solid #D9D9D9;
+    color: #D9D9D9;
+    -webkit-transform-origin: 0 0;
+    transform-origin: 0 0;
+    -webkit-transform: scaleY(0.5);
+    transform: scaleY(0.5);
+}
 </style>
 
 <template>
@@ -27,24 +64,48 @@
 		</blur>
 		
 		<!-- 操作面板 -->
-		<grid :cols=2>
-			<grid-item @click.native="showCreate" label="创建房间">
-				<img slot="icon" src="../assets/create_room.png"/>
-			</grid-item>
-			<grid-item @click.native="joinRoom" label="加入房间">
-				<img slot="icon" src="../assets/join_room.png"/>
-			</grid-item>
-			<grid-item @click.native="currentRoom" label="当前房间">
-				<img slot="icon" src="../assets/now_room.png"/>
-			</grid-item>
-			<grid-item label="写评价">
-				<img slot="icon" src="../assets/comment.png"/>
-			</grid-item>
-		</grid>
+		<flexbox :gutter="0" wrap="wrap">
+			<flexbox-item :span="1/2" @click.native="showCreate">
+				<div class="flex-demo">
+					<x-icon class="grid-x-icon" type="android-add" size="50"></x-icon><br/>
+					<span class="f_content">创建房间</span>
+				</div>
+			</flexbox-item>
+			<flexbox-item :span="1/2" @click.native="joinRoom">
+				<div class="flex-demo">
+					<x-icon class="grid-x-icon" type="android-send" size="50"></x-icon><br/>
+					<span class="f_content">加入房间</span>
+				</div>
+			</flexbox-item>
+			<flexbox-item :span="1/2" @click.native="currentRoom">
+				<div class="flex-demo">
+					<x-icon class="grid-x-icon" type="android-bar" size="50"></x-icon><br/>
+					<span class="f_content">当前房间</span>
+				</div>
+			</flexbox-item>
+			<flexbox-item :span="1/2" @click.native="roomList">
+				<div class="flex-demo">
+					<x-icon class="grid-x-icon" type="ios-list" size="50"></x-icon><br/>
+					<span class="f_content">房间列表</span>
+				</div>
+			</flexbox-item>
+			<flexbox-item :span="1/2" @click.native="">
+				<div class="flex-demo">
+					<x-icon class="grid-x-icon" type="person" size="50"></x-icon><br/>
+					<span class="f_content">个人中心</span>
+				</div>
+			</flexbox-item>
+			<flexbox-item :span="1/2" @click.native="">
+				<div class="flex-demo">
+					<x-icon class="grid-x-icon" type="chatboxes" size="50"></x-icon><br/>
+					<span class="f_content">写评价</span>
+				</div>
+			</flexbox-item>
+		</flexbox>
 		
-		<box gap="10px 10px">
+		<!-- <box gap="10px 10px">
 			<x-button @click.native="test">测试显示glo</x-button>
-		</box>
+		</box> -->
 		
 		<!-- 创建房间对话框 -->
 		<x-dialog v-model="showCreateDialog" :hide-on-blur="true">
@@ -65,13 +126,13 @@
 </template>
 
 <script>
-import {XHeader,Blur,Grid,GridItem,XDialog,Card,XInput,XNumber,XButton,Box,Divider} from 'vux'
+import {XHeader,Blur,Grid,GridItem,XDialog,Card,XInput,XNumber,XButton,Box,Divider,Group,Flexbox,FlexboxItem} from 'vux'
 import User from '@/api/user.js'
 import Room from '@/api/room.js'
 import headImg from '@/assets/head.png'
 
 export default {
-	components:{XHeader,Blur,Grid,GridItem,XDialog,Card,XInput,XNumber,XButton,Box,Divider},
+	components:{XHeader,Blur,Grid,GridItem,XDialog,Card,XInput,XNumber,XButton,Box,Divider,Group,Flexbox,FlexboxItem},
 	data(){
 		return {
 			headimg:headImg,
@@ -95,7 +156,28 @@ export default {
 			this.$vux.confirm.prompt('', {
 				'title':'输入房间号',
 				onConfirm (room_no) {
-					_this.$router.push({path:'/room', query:{'room_no':room_no}})
+					if (_this.user.room_no && room_no != _this.user.room_no) {
+						//请先退出当前房间
+						_this.$vux.confirm.show({
+							title:'提示',
+							content:'是否退出当前所在房间',
+							onCancel(){
+								
+							},
+							onConfirm(){
+								//确认退出当前房间
+								Room.outRoom(_this, function(){
+									//显示奖励设置
+									_this.user.room_no=0;
+									_this.$router.push({path:'/room', query:{'room_no':room_no}})
+								});
+							}
+						})
+					} else {
+						//显示奖励设置
+						_this.$router.push({path:'/room', query:{'room_no':room_no}})
+					}
+					
 		        },
 			});
 		},
@@ -148,6 +230,10 @@ export default {
 			}
 			this.$router.push({path:'/room', query:{'room_no':this.user.room_no}})
 		},
+		//房间列表
+		roomList() {
+			this.$router.push({path:'/room_list'})
+		},
 		//点击左侧按钮
 		backClick() {
 			if (!this.uid) {
@@ -170,7 +256,7 @@ export default {
 	computed:{
 		//左侧显示文字
 		leftTxt:function() {
-			return this.uid?'我':'登录';
+			return this.uid?this.user.uname:'登录';
 		}
 	}
 }

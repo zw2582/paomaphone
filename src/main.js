@@ -23,6 +23,7 @@ Vue.prototype.user = {
 	
 //定义全局的websocket连接,登录成功之后自动连接
 Vue.prototype.ws = null;
+Vue.prototype.shakeHandler=null;
 
 /* eslint-disable no-new */
 new Vue({
