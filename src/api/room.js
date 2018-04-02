@@ -150,7 +150,7 @@ export default {
 	 * @param resultfn 比赛结束的结果展示回调，rank，data
 	 * @returns
 	 */
-	getReward:function(vue, fn) {
+	getReward:function(vue, room_no, runfn) {
 		vue.$http.get(process.env.WEB_ADDR+'/room/reward?room_no='+room_no+'&uid='+vue.user.uid, {withCredentials:false}).then(res=>{
 			var resdata = res.data
 			if(resdata.status == 1) {
@@ -169,37 +169,41 @@ export default {
 		//bind
 		this.bind = function() {
 			if (window.DeviceMotionEvent) {
-				window.addEventListener('devicemotion', deviceMotionHandler, false);
+				window.addEventListener('devicemotion', this.deviceMotionHandler);
 			} else {
 				this.vue.$vux.alert.show({title:'提示',content:'你的设备不支持摇动'});
 			}
 		}
 		
-		//onbind
-		this.onbind = function() {
-			window.removeEventListener('devicemotion', deviceMotionHandler)
+		//onbind,devicemotion
+		this.unbind = function() {
+			window.removeEventListener('devicemotion', this.deviceMotionHandler)
 		}
 		
-		var SHAKE_THRESHOLD = 3000;
-	    var last_update = 0;
-	    var y = 0; var z=0; var last_x=0; var last_y=0; var last_z=0;var x=0;
-		function deviceMotionHandler(eventData) {
+		this.SHAKE_THRESHOLD = 3000;
+	    this.last_update = 0;
+	    this.y = 0; this.z=0; this.last_x=0; this.last_y=0; this.last_z=0;this.x=0;
+	    
+	    var _this = this;
+		this.deviceMotionHandler = function(eventData) {
+			console.log('window click')
 	        var acceleration = eventData.accelerationIncludingGravity;
 	        var curTime = new Date().getTime();
-	        if ((curTime - last_update) > 100) {
-	            var diffTime = curTime - last_update;
-	            last_update = curTime;
-	            x = acceleration.x;
-	            y = acceleration.y;
-	            z = acceleration.z;
-	            var speed = Math.abs(x + y + z - last_x - last_y - last_z) / diffTime * 10000;
-	            if (speed > SHAKE_THRESHOLD) {
-	            		this.callback && this.callback()
+	        if ((curTime - _this.last_update) > 100) {
+	            var diffTime = curTime - _this.last_update;
+	            _this.last_update = curTime;
+	            _this.x = acceleration.x;
+	            _this.y = acceleration.y;
+	            _this.z = acceleration.z;
+	            var speed = Math.abs(_this.x + _this.y + _this.z - _this.last_x - _this.last_y - _this.last_z) / diffTime * 10000;
+	            if (speed > _this.SHAKE_THRESHOLD) {
+	            		_this.callback && _this.callback()
 	            }
-	            last_x = x;
-	            last_y = y;
-	            last_z = z;
+	            _this.last_x = _this.x;
+	            _this.last_y = _this.y;
+	            _this.last_z = _this.z;
 	        }
 	    }
+		return this;
 	}
 }

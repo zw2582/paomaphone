@@ -149,6 +149,7 @@ export default {
 		},
 		//比赛数据显示
 		showRunData(data, ranks, max, min) {
+			var _this = this;
 			var min_max_rate = min/max;
 			for(var i=0,len=_this.users.length;i<len;i++) {
 				var user = _this.users[i];
@@ -166,6 +167,7 @@ export default {
 		startGame(){
 			//接受到比赛开始命令，三秒后开始
 			var i = 3;
+			var _this = this;
 			_this.$set(_this, 'showBeginDialog', true);
 			_this.$set(_this, 'beginTxt', i);
 			var interclock = setInterval(function(){
@@ -182,16 +184,16 @@ export default {
 		},
 		//比赛结束
 		stopGame() {
-			this.shake.onbind()	//关闭摇动手机监听
 			var _this = this;
+			_this.shake.unbind()	//关闭摇动手机监听
 			Room.getReward(_this, _this.room_no, function(rank, money, jifen){
 				_this.$vux.alert.show({title:'比赛结束',content:'您的名次:'+(parseInt(rank)+1)+',奖金:'+money+',积分:'+jifen})
 				_this.$set(_this.room, 'isactive', 3)
 			})
-		}
+		},
 		testInfo() {
-			console.log(this.room)
-			console.log(this.users)
+			var _this = this
+			_this.$vux.toast.text('sd')
 		}
 	},
 	computed: {
@@ -201,6 +203,9 @@ export default {
 	},
 	destroyed: function(){
 		//离开当前页面触发
+		if (this.room.isactive != 2) {
+			this.shake.unbind()
+		}
 	},
 	mounted() {
 		var _this = this;
@@ -224,7 +229,7 @@ export default {
 				_this.$set(_this, 'join', true)
 			})
 			//绑定摇晃器
-			this.shake = new Room.shakePhone(_this, function(){
+			_this.shake = Room.shakePhone(_this, function(){
 				WSAction.play(_this.ws, _this.user.uid)
 			})
 			//连接websocket，接受数据信息
@@ -286,7 +291,7 @@ export default {
 							_this.stopGame()
 						} else if(data.action == 'result') {
 							//比赛数据推送通知
-							_this.showRunData(data.data,data.ranks,data.max,data.min)
+							_this.showRunData(data.result,data.ranks,data.max,data.min)
 						}
 					}
 				}
