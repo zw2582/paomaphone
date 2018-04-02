@@ -44,7 +44,7 @@
 </style>
 <template>
 	<div>
-		<!-- 脑袋 -->
+		<!-- 脑袋 
 		<x-header>
 			<span>房间列表</span>
 		</x-header>
@@ -58,20 +58,39 @@
 					加入房间》
 				</div>
 			</flexbox-item>
-		</flexbox>
+		</flexbox>-->
+		<x-button @click.native="start">start</x-button>
+		<x-button @click.native="end">end</x-button>
+		<span>dd:{{dd}}</span>
 	</div>
 </template>
 
 <script>
-	import {Flexbox,FlexboxItem,XHeader} from 'vux'
+	import {Flexbox,FlexboxItem,XHeader,XButton} from 'vux'
+	import Shake from '@/api/shake.js'
 	
 	export default {
-		components:{Flexbox,FlexboxItem,XHeader},
+		components:{Flexbox,FlexboxItem,XHeader,XButton},
 		data(){
 			return {
 				'rooms':[
 					{room_no:1,uname:'test1',headimg:'http://img.mp.itc.cn/upload/20170801/afc9309df32944129d0820121bd64c9e_th.jpg'}
-				]
+				],
+				dd:0
+			}
+		},
+		methods : {
+			start:function(){
+				console.log('start')
+				var _this = this
+				Shake.bind(function(){
+					var dd = _this.dd;
+					_this.$set(_this, 'dd', ++dd)
+				})
+			},
+			end:function() {
+				this.$set(this, 'dd', 0)
+				Shake.unbind()
 			}
 		}
 	}

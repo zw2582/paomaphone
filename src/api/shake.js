@@ -1,43 +1,51 @@
 /**
  * http://usejsdoc.org/
  */
-import Vue from 'vue'
-import WSAction from '@/api/ws_action.js'
 
-export default {
-	shakePhone:function() {
-		var _this = this;
-		//监听手机摇动事件
-		if (window.DeviceMotionEvent) {
-			window.addEventListener('devicemotion', deviceMotionHandler, false);
-		} else {
-			Vue.$vux.toast.text('你的设备不支持摇动')
-		}
-		var SHAKE_THRESHOLD = 3000;
-	    var last_update = 0;
-	    var y = 0; var z=0; var last_x=0; var last_y=0; var last_z=0;var x=0;
-		function deviceMotionHandler(eventData) {
-	        var acceleration = eventData.accelerationIncludingGravity;
+export default (function(){
+	 var callfn;
+	 var motionData={
+	   SHAKE_THRESHOLD:3000,
+	   last_update:0,
+	   x:0,
+	   y:0,
+	   z:0,
+	   last_x:0,
+	   last_y:0,
+	   last_z:0
+	  }
+	 
+	 return {bind,unbind}
+	 
+	 function bind(fn) {
+	  callfn = fn;
+	  console.log('bind listenser')
+	  // devicemotion
+	  window.addEventListener('devicemotion', deviceMotionHandler);
+	 }
+	 
+	 function unbind() {
+	  console.log('unbind listenser')
+	  window.removeEventListener('devicemotion', deviceMotionHandler)
+	 } 
+
+	 function deviceMotionHandler(eventData) {
+	  console.log('call callback')
+	  var acceleration = eventData.accelerationIncludingGravity;
 	        var curTime = new Date().getTime();
-	        if ((curTime - last_update) > 100) {
-	            var diffTime = curTime - last_update;
-	            last_update = curTime;
-	            x = acceleration.x;
-	            y = acceleration.y;
-	            z = acceleration.z;
-	            var speed = Math.abs(x + y + z - last_x - last_y - last_z) / diffTime * 10000;
-	            if (speed > SHAKE_THRESHOLD) {
-	                if(!_this.shake) {
-	                	Vue.$vux.toast.show({text:'还没有开始，别着急'});
-	                } else {
-	                	//发送数据
-	                	WSAction.play(1);
-	                }
+	        if ((curTime - motionData.last_update) > 100) {
+	            var diffTime = curTime - motionData.last_update;
+	            motionData.last_update = curTime;
+	            motionData.x = acceleration.x;
+	            motionData.y = acceleration.y;
+	            motionData.z = acceleration.z;
+	            var speed = Math.abs(motionData.x + motionData.y + motionData.z - motionData.last_x - motionData.last_y - motionData.last_z) / diffTime * 10000;
+	            if (speed > motionData.SHAKE_THRESHOLD) {
+	            		callfn && callfn()
 	            }
-	            last_x = x;
-	            last_y = y;
-	            last_z = z;
+	            motionData.last_x = motionData.x;
+	            motionData.last_y = motionData.y;
+	            motionData.last_z = motionData.z;
 	        }
-	    }
-	}
-}
+	 }
+	})();
