@@ -68,6 +68,7 @@
 			<span v-if="room.isactive==1">准备开始游戏</span>
 			<span v-if="room.isactive==2">游戏进行中</span>
 			<span v-if="room.isactive==3">游戏结束</span>
+			<x-button v-if="!join" @click.native="joinRoom" :gradients="['#1D62F0', '#19D5FD']">加入房间</x-button>
 		</template>
 		</box>
 		
@@ -89,6 +90,7 @@ import WSAction from '@/api/ws_action.js'
 import Room from '@/api/room.js'
 import User from '@/api/user.js'
 import ActiveHourse from '@/assets/active_hourse.gif'
+import Shake from '@/api/shake.js'
 
 export default {
 	components:{XHeader,Group,Cell,XButton,XDialog,Card,Divider,Box},
@@ -105,7 +107,6 @@ export default {
 			beginTxt:3,
 			users:[],
 			hourseimg:ActiveHourse,	//跑马图片
-			shake:null,	//摇动器
 		}
 	},
 	methods :{
@@ -144,7 +145,7 @@ export default {
 			if(_this.room.isactive != 2) {
 		    		_this.$vux.toast.show({text:'还没有开始，别着急'});
 		    } else {
-		    		WSAction.play(_this.ws, _this.user.uid)
+		    		WSAction.play(_this.user.uid)
 		    }
 		},
 		//比赛数据显示
@@ -177,7 +178,6 @@ export default {
 					_this.$set(_this, 'beginTxt', '开始摇起来');
 					_this.$set(_this, 'showBeginDialog', false);
 					_this.$set(_this.room, 'isactive', 2);
-					_this.shake.bind();	//启动摇动手机
 					clearInterval(interclock);
 				}
 			}, 1000);
@@ -185,7 +185,6 @@ export default {
 		//比赛结束
 		stopGame() {
 			var _this = this;
-			_this.shake.unbind()	//关闭摇动手机监听
 			Room.getReward(_this, _this.room_no, function(rank, money, jifen){
 				_this.$vux.alert.show({title:'比赛结束',content:'您的名次:'+(parseInt(rank)+1)+',奖金:'+money+',积分:'+jifen})
 				_this.$set(_this.room, 'isactive', 3)
@@ -204,7 +203,7 @@ export default {
 	destroyed: function(){
 		//离开当前页面触发
 		if (this.room.isactive != 2) {
-			this.shake.unbind()
+			Shake.unbind()
 		}
 	},
 	mounted() {
@@ -229,17 +228,17 @@ export default {
 				_this.$set(_this, 'join', true)
 			})
 			//绑定摇晃器
-			_this.shake = Room.shakePhone(_this, function(){
-				WSAction.play(_this.ws, _this.user.uid)
+			Shake.bind(function(){
+				if (_this.room.isactive == 2) {
+					WSAction.play(_this.user.uid)
+				} else {
+					_this.$vux.toast.show({text:'比赛还未开始', position:'bottom', type:'text'})
+				}
 			})
 			//连接websocket，接受数据信息
-			WSAction.conn(_this, function(ws){
-				//连接成功时
-				ws.onopen=function(event){
+			WSAction.conn(_this, function(event){
 					console.log('ws连接成功')
-				}
-				//当发送消息时
-				ws.onmessage = function(evt) {
+				},function(evt) {
 					//处理消息
 					var received_msg = evt.data;
 					console.log("接收到消息");
@@ -294,13 +293,10 @@ export default {
 							_this.showRunData(data.result,data.ranks,data.max,data.min)
 						}
 					}
-				}
-				//当连接结束时
-				ws.onclose = function(event) {
+				},function(event) {
 					_this.$vux.toast.text('连接已断开')
 					_this.$router.push({path:'/room', query:{'room_no':room_no}})
-				}
-			});
+				});
 		}, function(){
 			//加入房间失败回到首页
 			_this.$router.push({path:'/'})
