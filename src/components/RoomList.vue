@@ -1,97 +1,81 @@
-<style scoped>
-.room_head,.room_info{
-	display:inline-block;
-}
-.room_head img {
-	width:60px;
-	height:60px;
-	border-radius:50%;
-	border:4px solid #ececec;
-}
-.flex-demo {
-  color:#000000;
-  position: relative;
-  padding-top:10px;
-  padding-bottom:10px;
-  font-size:14px;
-}
-.flex-demo:after {
-    content: " ";
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 1px;
-    bottom: 0;
-    border-right: 1px solid #C7C7C7;
-    color: #C7C7C7;
-    transform-origin: 100% 0;
-    transform: scaleX(0.5);
-}
-.flex-demo:before {
-    content: " ";
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    height: 1px;
-    border-top: 1px solid #D9D9D9;
-    color: #D9D9D9;
-    -webkit-transform-origin: 0 0;
-    transform-origin: 0 0;
-    -webkit-transform: scaleY(0.5);
-    transform: scaleY(0.5);
+<style>
+html,
+body {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
 }
 </style>
 <template>
-	<div>
-		<!-- 脑袋 
-		<x-header>
-			<span>房间列表</span>
-		</x-header>
-		
-		<flexbox :gutter="0" wrap="wrap">
-			<flexbox-item class="flex-demo" :span="1/2" v-for="room in rooms">
-				<div class="room_head"><img :src="room.headimg" width="100%"/></div>
-				<div class="room_info">
-					房主:{{room.uname}}<br/>
-					模式:红包模式<br/>
-					加入房间》
+	<div style="height:100%">
+		<view-box>
+			<x-header slot="header"><span>房间列表</span></x-header>
+			<group>
+			<cell v-for="(room,i) in rooms" :title="'房间号:'+room.room_no" :key="i" 
+				@click.native="joinRoom(room.room_no)">
+				<img :src="room.headimg" slot="icon" height="60px" />
+				<span slot="after-title">房主:{{room.uname}}</span>
+				<!-- <span slot="inline-desc">inline desc</span> -->
+				<div>
+					<span>{{room.online}}人({{room.zaixian?'在线':'下线'}})</span><br/>
+					<span>{{room.isactive==1?'准备中':room.isactive==2?'进行中':'比赛结束'}}</span>
 				</div>
-			</flexbox-item>
-		</flexbox>-->
-		<x-button @click.native="start">start</x-button>
-		<x-button @click.native="end">end</x-button>
-		<span>dd:{{dd}}</span>
+			</cell>
+			</group>
+		</view-box>
+		
 	</div>
 </template>
 
 <script>
-	import {Flexbox,FlexboxItem,XHeader,XButton} from 'vux'
-	import Shake from '@/api/shake.js'
-	
-	export default {
-		components:{Flexbox,FlexboxItem,XHeader,XButton},
-		data(){
-			return {
-				'rooms':[
-					{room_no:1,uname:'test1',headimg:'http://img.mp.itc.cn/upload/20170801/afc9309df32944129d0820121bd64c9e_th.jpg'}
-				],
-				dd:0
-			}
-		},
-		methods : {
-			start:function(){
-				console.log('start')
-				var _this = this
-				Shake.bind(function(){
-					var dd = _this.dd;
-					_this.$set(_this, 'dd', ++dd)
-				})
-			},
-			end:function() {
-				this.$set(this, 'dd', 0)
-				Shake.unbind()
-			}
-		}
-	}
+import { ViewBox, XHeader, Tabbar, Cell, Group } from "vux";
+import Room from "../api/room";
+import User from "../api/user";
+
+export default {
+  components: { ViewBox, XHeader, Tabbar, Cell, Group },
+  data() {
+    return {
+      rooms: []
+    };
+  },
+  methods: {
+    joinRoom(roomNo) {
+		console.log(roomNo)
+      var _this = this;
+      if (!User.loginFilter(this)) {
+        return;
+      }
+
+      if (_this.user.room_no && roomNo != _this.user.room_no) {
+        //请先退出当前房间
+        _this.$vux.confirm.show({
+          title: "提示",
+          content: "是否退出当前所在房间",
+          onCancel() {},
+          onConfirm() {
+            //确认退出当前房间
+            Room.outRoom(_this, function() {
+              //显示奖励设置
+              _this.user.room_no = 0;
+              _this.$router.push({
+                path: "/room",
+                query: { room_no: roomNo }
+              });
+            });
+          }
+        });
+      } else {
+		  _this.$router.push({path:'/room', query:{'room_no':roomNo}})
+	  }
+    }
+  },
+  mounted() {
+    var _this = this;
+    //获取房间列表
+    Room.roomList(_this, rooms => {
+      this.$set(this, "rooms", rooms);
+    });
+  }
+};
 </script>

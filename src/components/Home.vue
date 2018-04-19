@@ -1,55 +1,3 @@
-<style scoped>
-.head-center {
-	text-align:center;
-	padding-top:20px;
-	color:#fff;
-	font-size:18px;
-}
-.head-center img {
-	width:100px;
-	height:100px;
-	border-radius:50%;
-	border:4px solid #ececec;
-}
-.grid-x-icon{
-	fill: #F70968;
-}
-.flex-demo {
-  text-align: center;
-  color:#000000;
-  position: relative;
-  padding-top:10px;
-  padding-bottom:10px;
-  font-size:14px;
-}
-.flex-demo:after {
-    content: " ";
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 1px;
-    bottom: 0;
-    border-right: 1px solid #C7C7C7;
-    color: #C7C7C7;
-    transform-origin: 100% 0;
-    transform: scaleX(0.5);
-}
-.flex-demo:before {
-    content: " ";
-    position: absolute;
-    left: 0;
-    top: 0;
-    right: 0;
-    height: 1px;
-    border-top: 1px solid #D9D9D9;
-    color: #D9D9D9;
-    -webkit-transform-origin: 0 0;
-    transform-origin: 0 0;
-    -webkit-transform: scaleY(0.5);
-    transform: scaleY(0.5);
-}
-</style>
-
 <template>
 	<div>
 		<!-- 脑袋 -->
@@ -89,13 +37,13 @@
 					<span class="f_content">房间列表</span>
 				</div>
 			</flexbox-item>
-			<flexbox-item :span="1/2" @click.native="">
+			<flexbox-item :span="1/2" @click.native="go">
 				<div class="flex-demo">
 					<x-icon class="grid-x-icon" type="person" size="50"></x-icon><br/>
 					<span class="f_content">个人中心</span>
 				</div>
 			</flexbox-item>
-			<flexbox-item :span="1/2" @click.native="">
+			<flexbox-item :span="1/2" @click.native="go">
 				<div class="flex-demo">
 					<x-icon class="grid-x-icon" type="chatboxes" size="50"></x-icon><br/>
 					<span class="f_content">写评价</span>
@@ -129,7 +77,8 @@
 import {XHeader,Blur,Grid,GridItem,XDialog,Card,XInput,XNumber,XButton,Box,Divider,Group,Flexbox,FlexboxItem} from 'vux'
 import User from '@/api/user.js'
 import Room from '@/api/room.js'
-import headImg from '@/assets/head.png'
+import headImg from '@/assets/image/head.png'
+import '@/assets/css/Home.css'
 
 export default {
 	components:{XHeader,Blur,Grid,GridItem,XDialog,Card,XInput,XNumber,XButton,Box,Divider,Group,Flexbox,FlexboxItem},

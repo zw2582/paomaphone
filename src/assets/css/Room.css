@@ -1,0 +1,30 @@
+.head-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #ececec;
+}
+.road_ul {
+  margin: 10px;
+}
+.road_li {
+  padding-top: 10px;
+}
+.road {
+  display: inline-block;
+  height: 40px;
+  width: 240px;
+  border-bottom: 1px solid #982828;
+  position: relative;
+}
+.road .hourse {
+  position: absolute;
+  left: 0px;
+  top: 7px;
+  width: 40px;
+  height: 40px;
+  display: inline-block;
+}
+.road_li .rank {
+  font-size: 40px;
+}

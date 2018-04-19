@@ -4,7 +4,7 @@ import Vue from 'vue'
 import FastClick from 'fastclick'
 import App from './App'
 import router from './router'
-import { AjaxPlugin,LoadingPlugin,ToastPlugin,AlertPlugin,ConfirmPlugin } from 'vux'
+import { AjaxPlugin, LoadingPlugin, ToastPlugin, AlertPlugin, ConfirmPlugin } from 'vux'
 
 FastClick.attach(document.body)
 
@@ -16,14 +16,14 @@ Vue.use(ToastPlugin)
 Vue.use(AlertPlugin)
 Vue.use(ConfirmPlugin)
 
-//设置用户数据
+// 设置用户数据
 Vue.prototype.user = {
-	'headimg':'../assets/head.png'
+  'headimg': '../assets/head.png'
 }
-	
-//定义全局的websocket连接,登录成功之后自动连接
-Vue.prototype.ws = null;
-Vue.prototype.shakeHandler=null;
+
+// 定义全局的websocket连接,登录成功之后自动连接
+Vue.prototype.ws = null
+Vue.prototype.shakeHandler = null
 
 /* eslint-disable no-new */
 new Vue({
